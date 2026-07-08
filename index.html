@@ -394,23 +394,39 @@
 
     <section id="compressible">
       <div class="panel">
-        <h2>Compressible Flow Helper</h2>
+        <h2>Compressible Flow + Shock Tools</h2>
         <div class="grid">
+          <label>Gamma</label><input id="cf_g" value="1.4">
+          <label>Isentropic Mach M</label><input id="cf_M" value="2.0">
           <label>Static T, K</label><input id="cf_T" value="229">
           <label>Static P, kPa</label><input id="cf_P" value="29.92">
-          <label>Mach</label><input id="cf_M" value="0.8">
-          <label>gamma</label><input id="cf_g" value="1.4">
+          <label>Normal shock M1</label><input id="ns_M1" value="2.0">
+          <label>Oblique shock M1</label><input id="os_M1" value="5.0">
+          <label>Turn angle theta, deg</label><input id="os_theta" value="20.0">
+          <label>Fanno/Rayleigh M</label><input id="fr_M" value="1.0">
         </div>
         <div class="actions">
-          <button class="action" onclick="calcCompressible()">Calculate</button>
+          <button class="action" onclick="calcCompressible()">Calculate All</button>
           <button class="action secondary" onclick="copyLine('cf_copy')">Copy final line</button>
         </div>
+        <div class="note">Conical shock needs a Taylor-Maccoll numerical solver. This page gives the honest reference note; use the VT calculator for conical-shock numbers.</div>
       </div>
       <div class="panel">
         <h2>Output</h2>
-        <div class="formula">Tt = T*(1 + (gamma - 1)/2*M^2)
-Pt = P*(Tt/T)^(gamma/(gamma - 1))
-Pt/P* = ((gamma + 1)/2)^(gamma/(gamma - 1))</div>
+        <div class="formula">Isentropic:
+Tt/T = 1 + (gamma - 1)/2*M^2
+Pt/P = (Tt/T)^(gamma/(gamma - 1))
+A/A* = (1/M)*[(2/(gamma + 1))*(1 + (gamma - 1)/2*M^2)]^((gamma + 1)/(2*(gamma - 1)))
+
+Normal shock:
+M2^2 = [1 + (gamma - 1)/2*M1^2] / [gamma*M1^2 - (gamma - 1)/2]
+p2/p1 = 1 + 2*gamma/(gamma + 1)*(M1^2 - 1)
+
+Oblique shock:
+theta-beta-M relation solved numerically for weak shock by default.
+
+Fanno/Rayleigh:
+Perfect-gas star relations, useful for table-style checks.</div>
         <div class="results" id="cf_results"></div>
         <div class="copyline" id="cf_copy"></div>
       </div>
@@ -604,6 +620,113 @@ TSFC = mdot_core*f/F_net</div>
     const row = (label, value) => `<div class="result-row"><span>${label}</span><strong>${value}</strong></div>`;
     const crit = (g) => Math.pow((g + 1) / 2, g / (g - 1));
     const machFromPR = (Pt, P, g) => Math.sqrt(Math.max(0, (2 / (g - 1)) * (Math.pow(Pt / P, (g - 1) / g) - 1)));
+    const deg = (rad) => rad * 180 / Math.PI;
+    const rad = (degValue) => degValue * Math.PI / 180;
+    const safeAsinDeg = (x) => Math.abs(x) <= 1 ? deg(Math.asin(x)) : NaN;
+
+    function isentropicRatios(M, g) {
+      const tau = 1 + (g - 1) / 2 * M * M;
+      const T_T0 = 1 / tau;
+      const p_p0 = Math.pow(tau, -g / (g - 1));
+      const rho_rho0 = Math.pow(tau, -1 / (g - 1));
+      const Tstar_T0 = 2 / (g + 1);
+      const pstar_p0 = Math.pow(2 / (g + 1), g / (g - 1));
+      const rhostar_rho0 = Math.pow(2 / (g + 1), 1 / (g - 1));
+      const area = (1 / M) * Math.pow((2 / (g + 1)) * tau, (g + 1) / (2 * (g - 1)));
+      const nu = M > 1 ? deg(Math.sqrt((g + 1) / (g - 1)) * Math.atan(Math.sqrt((g - 1) / (g + 1) * (M * M - 1))) - Math.atan(Math.sqrt(M * M - 1))) : 0;
+      return {
+        tau,
+        T_T0,
+        p_p0,
+        rho_rho0,
+        T_Tstar: T_T0 / Tstar_T0,
+        p_pstar: p_p0 / pstar_p0,
+        rho_rhostar: rho_rho0 / rhostar_rho0,
+        area,
+        machAngle: M >= 1 ? safeAsinDeg(1 / M) : NaN,
+        nu
+      };
+    }
+
+    function normalShock(M1, g) {
+      const M1s = M1 * M1;
+      const M2s = (1 + (g - 1) / 2 * M1s) / (g * M1s - (g - 1) / 2);
+      const p2p1 = 1 + 2 * g / (g + 1) * (M1s - 1);
+      const rho2rho1 = ((g + 1) * M1s) / ((g - 1) * M1s + 2);
+      const T2T1 = p2p1 / rho2rho1;
+      const pt1p1 = Math.pow(1 + (g - 1) / 2 * M1s, g / (g - 1));
+      const pt2p2 = Math.pow(1 + (g - 1) / 2 * M2s, g / (g - 1));
+      return {
+        M2: Math.sqrt(Math.max(0, M2s)),
+        p2p1,
+        rho2rho1,
+        T2T1,
+        p02p01: p2p1 * pt2p2 / pt1p1,
+        p1p02: 1 / (p2p1 * pt2p2)
+      };
+    }
+
+    function thetaFromBeta(M1, beta, g) {
+      const m2 = M1 * M1;
+      const sb = Math.sin(beta);
+      const numerator = 2 / Math.tan(beta) * (m2 * sb * sb - 1);
+      const denominator = m2 * (g + Math.cos(2 * beta)) + 2;
+      return Math.atan(numerator / denominator);
+    }
+
+    function obliqueShockWeak(M1, thetaDeg, g) {
+      if (M1 <= 1 || thetaDeg <= 0) return null;
+      const theta = rad(thetaDeg);
+      const betaMin = Math.asin(1 / M1) + 1e-6;
+      const betaMax = Math.PI / 2 - 1e-6;
+      let lastBeta = betaMin;
+      let lastF = thetaFromBeta(M1, lastBeta, g) - theta;
+      let bracket = null;
+      for (let i = 1; i <= 900; i += 1) {
+        const beta = betaMin + (betaMax - betaMin) * i / 900;
+        const f = thetaFromBeta(M1, beta, g) - theta;
+        if (lastF <= 0 && f >= 0) {
+          bracket = [lastBeta, beta];
+          break;
+        }
+        lastBeta = beta;
+        lastF = f;
+      }
+      if (!bracket) return null;
+      let lo = bracket[0], hi = bracket[1];
+      for (let i = 0; i < 70; i += 1) {
+        const mid = (lo + hi) / 2;
+        const fmid = thetaFromBeta(M1, mid, g) - theta;
+        if (fmid >= 0) hi = mid; else lo = mid;
+      }
+      const beta = (lo + hi) / 2;
+      const Mn1 = M1 * Math.sin(beta);
+      const ns = normalShock(Mn1, g);
+      const Mn2 = ns.M2;
+      const M2 = Mn2 / Math.sin(beta - theta);
+      return { ...ns, betaDeg: deg(beta), thetaDeg, Mn1, Mn2, M2 };
+    }
+
+    function fannoRatios(M, g) {
+      const m2 = M * M;
+      const T_Tstar = (g + 1) / (2 + (g - 1) * m2);
+      const p_pstar = (1 / M) * Math.sqrt((g + 1) / (2 + (g - 1) * m2));
+      const rho_rhostar = (1 / M) * Math.sqrt((2 + (g - 1) * m2) / (g + 1));
+      const pt_ptstar = (1 / M) * Math.pow((2 + (g - 1) * m2) / (g + 1), (g + 1) / (2 * (g - 1)));
+      const fL_D = (1 - m2) / (g * m2) + (g + 1) / (2 * g) * Math.log(((g + 1) * m2) / (2 + (g - 1) * m2));
+      return { T_Tstar, p_pstar, rho_rhostar, pt_ptstar, U_Ustar: 1 / rho_rhostar, fL_D };
+    }
+
+    function rayleighRatios(M, g) {
+      const m2 = M * M;
+      const p_pstar = (g + 1) / (1 + g * m2);
+      const T_Tstar = m2 * Math.pow((g + 1) / (1 + g * m2), 2);
+      const rho_rhostar = p_pstar / T_Tstar;
+      const U_Ustar = 1 / rho_rhostar;
+      const Tt_Ttstar = T_Tstar * (1 + (g - 1) / 2 * m2) / ((g + 1) / 2);
+      const pt_ptstar = p_pstar * Math.pow((1 + (g - 1) / 2 * m2) / ((g + 1) / 2), g / (g - 1));
+      return { T_Tstar, p_pstar, rho_rhostar, U_Ustar, Tt_Ttstar, pt_ptstar };
+    }
 
     document.querySelectorAll(".tab").forEach((button) => {
       button.addEventListener("click", () => {
@@ -926,16 +1049,54 @@ TSFC = mdot_core*f/F_net</div>
 
     function calcCompressible() {
       const T = num("cf_T"), P = num("cf_P"), M = num("cf_M"), g = num("cf_g");
+      const M1 = num("ns_M1"), osM1 = num("os_M1"), theta = num("os_theta"), frM = num("fr_M");
       const Tt = T * (1 + (g - 1) / 2 * M * M);
       const Pt = P * Math.pow(Tt / T, g / (g - 1));
       const c = crit(g);
+      const iso = isentropicRatios(M, g);
+      const ns = normalShock(M1, g);
+      const os = obliqueShockWeak(osM1, theta, g);
+      const fan = fannoRatios(frM, g);
+      const ray = rayleighRatios(frM, g);
       $("cf_results").innerHTML = [
-        row("Tt", `${fmt(Tt, 3)} K`),
-        row("Pt", `${fmt(Pt, 3)} kPa`),
-        row("Critical Pt/P*", fmt(c, 4)),
-        row("Current Pt/P", fmt(Pt / P, 4))
+        row("Isentropic Tt", `${fmt(Tt, 3)} K`),
+        row("Isentropic Pt", `${fmt(Pt, 3)} kPa`),
+        row("Mach angle", `${fmt(iso.machAngle, 3)} deg`),
+        row("Prandtl-Meyer angle", `${fmt(iso.nu, 3)} deg`),
+        row("T/T0", fmt(iso.T_T0, 5)),
+        row("p/p0", fmt(iso.p_p0, 5)),
+        row("rho/rho0", fmt(iso.rho_rho0, 5)),
+        row("T/T*", fmt(iso.T_Tstar, 5)),
+        row("p/p*", fmt(iso.p_pstar, 5)),
+        row("rho/rho*", fmt(iso.rho_rhostar, 5)),
+        row("A/A*", fmt(iso.area, 5)),
+        row("Critical Pt/P*", fmt(c, 5)),
+        row("Normal shock M2", fmt(ns.M2, 5)),
+        row("Normal shock p2/p1", fmt(ns.p2p1, 5)),
+        row("Normal shock rho2/rho1", fmt(ns.rho2rho1, 5)),
+        row("Normal shock T2/T1", fmt(ns.T2T1, 5)),
+        row("Normal shock p02/p01", fmt(ns.p02p01, 5)),
+        row("Oblique shock beta", os ? `${fmt(os.betaDeg, 4)} deg` : "no attached weak shock"),
+        row("Oblique shock Mn1", os ? fmt(os.Mn1, 5) : "check theta"),
+        row("Oblique shock Mn2", os ? fmt(os.Mn2, 5) : "check theta"),
+        row("Oblique shock M2", os ? fmt(os.M2, 5) : "check theta"),
+        row("Oblique shock p2/p1", os ? fmt(os.p2p1, 5) : "check theta"),
+        row("Oblique shock T2/T1", os ? fmt(os.T2T1, 5) : "check theta"),
+        row("Fanno T/T*", fmt(fan.T_Tstar, 5)),
+        row("Fanno P/P*", fmt(fan.p_pstar, 5)),
+        row("Fanno rho/rho*", fmt(fan.rho_rhostar, 5)),
+        row("Fanno Po/Po*", fmt(fan.pt_ptstar, 5)),
+        row("Fanno U/U*", fmt(fan.U_Ustar, 5)),
+        row("Fanno 4fL*/D", fmt(fan.fL_D, 5)),
+        row("Rayleigh T/T*", fmt(ray.T_Tstar, 5)),
+        row("Rayleigh P/P*", fmt(ray.p_pstar, 5)),
+        row("Rayleigh rho/rho*", fmt(ray.rho_rhostar, 5)),
+        row("Rayleigh To/To*", fmt(ray.Tt_Ttstar, 5)),
+        row("Rayleigh Po/Po*", fmt(ray.pt_ptstar, 5)),
+        row("Rayleigh U/U*", fmt(ray.U_Ustar, 5)),
+        row("Conical shock", "Use VT calculator / Taylor-Maccoll; not approximated here")
       ].join("");
-      $("cf_copy").textContent = `Tt = ${fmt(Tt, 3)} K, Pt = ${fmt(Pt, 3)} kPa, critical Pt/P = ${fmt(c, 4)}`;
+      $("cf_copy").textContent = `Isentropic M=${fmt(M, 4)}: T/T0=${fmt(iso.T_T0, 5)}, p/p0=${fmt(iso.p_p0, 5)}, A/A*=${fmt(iso.area, 5)} | Normal shock M1=${fmt(M1, 4)}: M2=${fmt(ns.M2, 5)}, p2/p1=${fmt(ns.p2p1, 5)}, p02/p01=${fmt(ns.p02p01, 5)} | Oblique weak: beta=${os ? fmt(os.betaDeg, 4) : "no attached shock"}, M2=${os ? fmt(os.M2, 5) : "check theta"}`;
     }
 
     function calcCompressor() {
