@@ -325,6 +325,17 @@
         <div class="panel">
           <h2>Exam Solver</h2>
           <div class="note">Use this for the likely one-big-problem exam format. Enter what the professor gives, leave unknowns blank, and solve in station order. The right panel tells you what is still missing.</div>
+          <div class="guide-block">
+            <strong>Need a relation?</strong>
+            <ul>
+              <li>`p/p0`, `T/T0`, `A/A*`, Mach angle, Prandtl-Meyer -> Compressible Reference.</li>
+              <li>Choking or nozzle pressure ratio -> Nozzle tab or Compressible Reference.</li>
+              <li>Normal shock or oblique wedge/turn shock -> Compressible Reference.</li>
+              <li>Friction duct -> Fanno in Compressible Reference.</li>
+              <li>Heat-addition duct -> Rayleigh in Compressible Reference.</li>
+            </ul>
+            Use the reference result as an input back in Exam Solver if the big engine problem needs it.
+          </div>
           <div class="full-grid">
             <div class="group">Freestream / station 0</div>
             <label>M0</label><input id="fc_M0" value="0.8"><span class="unit">-</span>
