@@ -258,6 +258,38 @@
     .log-item.missing { border-left-color: #f97316; }
     .log-item.done { border-left-color: var(--accent); }
     .log-item.check { border-left-color: #eab308; }
+    .result-heading {
+      margin-top: 10px;
+      padding: 8px 0 4px;
+      border-bottom: 2px solid var(--line);
+      color: #0f172a;
+      font-size: 13px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    .guide {
+      display: grid;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .guide-block {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 12px;
+    }
+    .guide-block strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #0f172a;
+    }
+    .guide-block ul {
+      margin: 6px 0 0 18px;
+      padding: 0;
+    }
+    .guide-block li { margin: 3px 0; }
     @media (max-width: 820px) {
       main { grid-template-columns: 1fr; padding: 12px; }
       .grid { grid-template-columns: 1fr; }
@@ -276,21 +308,23 @@
   </header>
 
   <nav class="tabs" aria-label="Calculator tabs">
-    <button class="tab active" data-tab="fullcycle">Full Cycle</button>
-    <button class="tab" data-tab="compressible">Compressible</button>
+    <button class="tab active" data-tab="fullcycle">Exam Solver</button>
+    <button class="tab" data-tab="compressible">Compressible Reference</button>
     <button class="tab" data-tab="compressor">Compressor/Fan</button>
     <button class="tab" data-tab="burner">Burner/AB</button>
     <button class="tab" data-tab="turbine">Turbine</button>
     <button class="tab" data-tab="nozzle">Nozzle</button>
     <button class="tab" data-tab="turbojet">Turbojet</button>
     <button class="tab" data-tab="turbofan">Turbofan</button>
+    <button class="tab" data-tab="reference">Checklist</button>
   </nav>
 
   <main>
     <section id="fullcycle" class="wide-section active">
       <div class="wide-layout">
         <div class="panel">
-          <h2>Full Cycle Missing-Value Solver</h2>
+          <h2>Exam Solver</h2>
+          <div class="note">Use this for the likely one-big-problem exam format. Enter what the professor gives, leave unknowns blank, and solve in station order. The right panel tells you what is still missing.</div>
           <div class="full-grid">
             <div class="group">Freestream / station 0</div>
             <label>M0</label><input id="fc_M0" value="0.8"><span class="unit">-</span>
@@ -394,7 +428,8 @@
 
     <section id="compressible">
       <div class="panel">
-        <h2>Compressible Flow + Shock Tools</h2>
+        <h2>Compressible Reference</h2>
+        <div class="note">Use these when the exam asks for a relation lookup: isentropic/nozzle, shocks, friction duct flow, or heat-addition duct flow. These support the engine solver but are not tied to one station chain.</div>
         <div class="grid">
           <label>Gamma</label><input id="cf_g" value="1.4">
           <label>Isentropic Mach M</label><input id="cf_M" value="2.0">
@@ -403,13 +438,13 @@
           <label>Normal shock M1</label><input id="ns_M1" value="2.0">
           <label>Oblique shock M1</label><input id="os_M1" value="5.0">
           <label>Turn angle theta, deg</label><input id="os_theta" value="20.0">
-          <label>Fanno/Rayleigh M</label><input id="fr_M" value="1.0">
+          <label>Fanno/Rayleigh Mach M</label><input id="fr_M" value="1.0">
         </div>
         <div class="actions">
           <button class="action" onclick="calcCompressible()">Calculate All</button>
           <button class="action secondary" onclick="copyLine('cf_copy')">Copy final line</button>
         </div>
-        <div class="note">Conical shock needs a Taylor-Maccoll numerical solver. This page gives the honest reference note; use the VT calculator for conical-shock numbers.</div>
+        <div class="note">Fanno = adiabatic constant-area duct with friction. Rayleigh = frictionless constant-area flow with heat addition. Conical shock needs Taylor-Maccoll; use the VT calculator for conical-shock numbers.</div>
       </div>
       <div class="panel">
         <h2>Output</h2>
@@ -435,6 +470,7 @@ Perfect-gas star relations, useful for table-style checks.</div>
     <section id="compressor">
       <div class="panel">
         <h2>Compressor / Fan</h2>
+        <div class="note">Component checker for compressor or fan stages. In Exam Solver, this same block can also reverse-solve pressure ratio or efficiency when enough station values are given.</div>
         <div class="grid">
           <label>Inlet Tt, K</label><input id="co_Tin" value="258.312">
           <label>Inlet Pt, kPa</label><input id="co_Pin" value="43.3278">
@@ -463,6 +499,7 @@ Power = mdot*cp*(Tt_out - Tt_in)</div>
     <section id="burner">
       <div class="panel">
         <h2>Burner / Afterburner</h2>
+        <div class="note">Use for main burner or afterburner fuel addition. In Exam Solver, given fuel ratio can reverse-solve burner efficiency or exit temperature when the other terms are known.</div>
         <div class="grid">
           <label>cp before burner, kJ/kg-K</label><input id="bu_cpin" value="1.004">
           <label>cp after burner, kJ/kg-K</label><input id="bu_cpout" value="1.239">
@@ -496,6 +533,7 @@ Pt_out = pi_b*Pt_in</div>
     <section id="turbine">
       <div class="panel">
         <h2>Turbine Power Balance</h2>
+        <div class="note">Use this for shaft work balance. In Exam Solver, given turbine outlet state can reverse-solve turbine or mechanical efficiency when possible.</div>
         <div class="grid">
           <label>Turbine inlet Tt, K</label><input id="tu_Tin" value="1780">
           <label>Turbine inlet Pt, kPa</label><input id="tu_Pin" value="366.5535">
@@ -534,6 +572,7 @@ Pt_out = Pt_in*(Tt_out_s/Tt_in)^(gamma/(gamma - 1))</div>
           <label>gamma</label><input id="no_g" value="1.3">
           <label>cp, kJ/kg-K</label><input id="no_cp" value="1.239">
           <label>Nozzle efficiency</label><input id="no_eta" value="1">
+          <label>Converging only</label><input id="no_conv" value="1">
         </div>
         <div class="actions">
           <button class="action" onclick="calcNozzle()">Calculate</button>
@@ -544,8 +583,8 @@ Pt_out = Pt_in*(Tt_out_s/Tt_in)^(gamma/(gamma - 1))</div>
         <h2>Output</h2>
         <div class="formula">Pt_exit = pi_n*Pt_in
 critical = ((gamma + 1)/2)^(gamma/(gamma - 1))
-If Pt_exit/Pamb >= critical: choked, M = 1
-If not choked: M from Pt/P
+If converging only = 1 and Pt_exit/Pamb >= critical: choked, M = 1
+If converging only = 0: use the given exit pressure to solve M from Pt/P
 V = sqrt(2*eta_n*cp*Tt*(1 - (P_exit/Pt_exit)^((gamma - 1)/gamma)))</div>
         <div class="results" id="no_results"></div>
         <div class="copyline" id="no_copy"></div>
@@ -555,6 +594,7 @@ V = sqrt(2*eta_n*cp*Tt*(1 - (P_exit/Pt_exit)^((gamma - 1)/gamma)))</div>
     <section id="turbojet">
       <div class="panel">
         <h2>Turbojet Specific Performance</h2>
+        <div class="note">Final performance checker for turbojet or afterburning turbojet streams. Use after station/nozzle values are known.</div>
         <div class="grid">
           <label>Flight velocity V0, m/s</label><input id="tj_V0" value="473.645">
           <label>Exit velocity V9, m/s</label><input id="tj_V9" value="1400.915">
@@ -583,6 +623,7 @@ eta_p = specific_thrust*V0/jet_power</div>
     <section id="turbofan">
       <div class="panel">
         <h2>Split-Flow Turbofan</h2>
+        <div class="note">Final performance checker for bypass plus core streams. Use after core and bypass exit velocities or mass split are known.</div>
         <div class="grid">
           <label>Flight velocity V0, m/s</label><input id="tf_V0" value="260.161">
           <label>Fan exit velocity V19, m/s</label><input id="tf_V19" value="338.398">
@@ -611,6 +652,61 @@ TSFC = mdot_core*f/F_net</div>
         <div class="copyline" id="tf_copy"></div>
       </div>
     </section>
+
+    <section id="reference" class="wide-section">
+      <div class="wide-layout">
+        <div class="panel">
+          <h2>Exam Checklist</h2>
+          <div class="guide">
+            <div class="guide-block">
+              <strong>Station order</strong>
+              0 free stream -> 2 inlet -> 3 compressor/fan -> 4 burner -> 5 turbine -> 7 afterburner -> 9 core nozzle, with 13/19 for bypass flow.
+            </div>
+            <div class="guide-block">
+              <strong>Unit traps</strong>
+              <ul>
+                <li>Convert Celsius to Kelvin before all stagnation and energy equations.</li>
+                <li>Keep pressure units consistent: Pa for force/area work, kPa is fine for ratios.</li>
+                <li>Use kJ/kg-K with kJ/kg, or J/kg-K with J/kg. Do not mix them.</li>
+              </ul>
+            </div>
+            <div class="guide-block">
+              <strong>Gas properties</strong>
+              Use air `gamma/cp` before combustion, hot-gas `gamma/cp` after burner, and afterburner values downstream of station 7 if given.
+            </div>
+            <div class="guide-block">
+              <strong>Fuel mass</strong>
+              Hot stream thrust and turbine/nozzle flow use fuel-added mass: `1 + f` or `1 + f + f_AB`.
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>What To Use</h2>
+          <div class="guide">
+            <div class="guide-block">
+              <strong>Engine-cycle station problem</strong>
+              Start in Exam Solver. Fill all givens, click solve, then use component tabs only to double-check a suspicious part.
+            </div>
+            <div class="guide-block">
+              <strong>Isentropic / nozzle / choking</strong>
+              Use Compressible Reference for `A/A*`, `p/p0`, Mach angle, Prandtl-Meyer, and quick pressure-ratio checks.
+            </div>
+            <div class="guide-block">
+              <strong>Shock problem</strong>
+              Use Normal Shock for straight shocks and Oblique Shock for wedge/turn-angle questions. Weak shock is the default unless the exam states strong shock.
+            </div>
+            <div class="guide-block">
+              <strong>Duct friction or heat addition</strong>
+              Use Fanno for adiabatic duct friction. Use Rayleigh for heat addition in constant-area flow.
+            </div>
+            <div class="guide-block">
+              <strong>If something stays blank</strong>
+              The calculator is not guessing. Read the missing message and add either a pressure ratio, exit state, efficiency, mass flow, or heat/fuel value.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -618,6 +714,7 @@ TSFC = mdot_core*f/F_net</div>
     const num = (id) => Number($(id).value);
     const fmt = (value, digits = 4) => Number.isFinite(value) ? value.toFixed(digits) : "check input";
     const row = (label, value) => `<div class="result-row"><span>${label}</span><strong>${value}</strong></div>`;
+    const resultHeading = (label) => `<div class="result-heading">${label}</div>`;
     const crit = (g) => Math.pow((g + 1) / 2, g / (g - 1));
     const machFromPR = (Pt, P, g) => Math.sqrt(Math.max(0, (2 / (g - 1)) * (Math.pow(Pt / P, (g - 1) / g) - 1)));
     const deg = (rad) => rad * 180 / Math.PI;
@@ -1059,6 +1156,7 @@ TSFC = mdot_core*f/F_net</div>
       const fan = fannoRatios(frM, g);
       const ray = rayleighRatios(frM, g);
       $("cf_results").innerHTML = [
+        resultHeading("Compressible Relations: Isentropic / Area-Mach / Nozzle"),
         row("Isentropic Tt", `${fmt(Tt, 3)} K`),
         row("Isentropic Pt", `${fmt(Pt, 3)} kPa`),
         row("Mach angle", `${fmt(iso.machAngle, 3)} deg`),
@@ -1071,29 +1169,34 @@ TSFC = mdot_core*f/F_net</div>
         row("rho/rho*", fmt(iso.rho_rhostar, 5)),
         row("A/A*", fmt(iso.area, 5)),
         row("Critical Pt/P*", fmt(c, 5)),
+        resultHeading("Shock Relations: Normal Shock"),
         row("Normal shock M2", fmt(ns.M2, 5)),
         row("Normal shock p2/p1", fmt(ns.p2p1, 5)),
         row("Normal shock rho2/rho1", fmt(ns.rho2rho1, 5)),
         row("Normal shock T2/T1", fmt(ns.T2T1, 5)),
         row("Normal shock p02/p01", fmt(ns.p02p01, 5)),
+        resultHeading("Shock Relations: Oblique Weak Shock"),
         row("Oblique shock beta", os ? `${fmt(os.betaDeg, 4)} deg` : "no attached weak shock"),
         row("Oblique shock Mn1", os ? fmt(os.Mn1, 5) : "check theta"),
         row("Oblique shock Mn2", os ? fmt(os.Mn2, 5) : "check theta"),
         row("Oblique shock M2", os ? fmt(os.M2, 5) : "check theta"),
         row("Oblique shock p2/p1", os ? fmt(os.p2p1, 5) : "check theta"),
         row("Oblique shock T2/T1", os ? fmt(os.T2T1, 5) : "check theta"),
+        resultHeading("Duct Flow: Fanno (Friction, Constant Area)"),
         row("Fanno T/T*", fmt(fan.T_Tstar, 5)),
         row("Fanno P/P*", fmt(fan.p_pstar, 5)),
         row("Fanno rho/rho*", fmt(fan.rho_rhostar, 5)),
         row("Fanno Po/Po*", fmt(fan.pt_ptstar, 5)),
         row("Fanno U/U*", fmt(fan.U_Ustar, 5)),
         row("Fanno 4fL*/D", fmt(fan.fL_D, 5)),
+        resultHeading("Duct Flow: Rayleigh (Heat Addition, Constant Area)"),
         row("Rayleigh T/T*", fmt(ray.T_Tstar, 5)),
         row("Rayleigh P/P*", fmt(ray.p_pstar, 5)),
         row("Rayleigh rho/rho*", fmt(ray.rho_rhostar, 5)),
         row("Rayleigh To/To*", fmt(ray.Tt_Ttstar, 5)),
         row("Rayleigh Po/Po*", fmt(ray.pt_ptstar, 5)),
         row("Rayleigh U/U*", fmt(ray.U_Ustar, 5)),
+        resultHeading("Conical Shock"),
         row("Conical shock", "Use VT calculator / Taylor-Maccoll; not approximated here")
       ].join("");
       $("cf_copy").textContent = `Isentropic M=${fmt(M, 4)}: T/T0=${fmt(iso.T_T0, 5)}, p/p0=${fmt(iso.p_p0, 5)}, A/A*=${fmt(iso.area, 5)} | Normal shock M1=${fmt(M1, 4)}: M2=${fmt(ns.M2, 5)}, p2/p1=${fmt(ns.p2p1, 5)}, p02/p01=${fmt(ns.p02p01, 5)} | Oblique weak: beta=${os ? fmt(os.betaDeg, 4) : "no attached shock"}, M2=${os ? fmt(os.M2, 5) : "check theta"}`;
@@ -1143,10 +1246,11 @@ TSFC = mdot_core*f/F_net</div>
     }
 
     function calcNozzle() {
-      const Tt = num("no_Tt"), PtIn = num("no_Pt"), pi = num("no_pi"), Pamb = num("no_P"), g = num("no_g"), cp = num("no_cp") * 1000, eta = num("no_eta");
+      const Tt = num("no_Tt"), PtIn = num("no_Pt"), pi = num("no_pi"), Pamb = num("no_P"), g = num("no_g"), cp = num("no_cp") * 1000, eta = num("no_eta"), conv = num("no_conv");
       const Pt = PtIn * pi;
       const c = crit(g);
-      const choked = Pt / Pamb >= c;
+      const ratioSaysChoked = Pt / Pamb >= c;
+      const choked = ratioSaysChoked && conv === 1;
       const Pe = choked ? Pt / c : Pamb;
       const M = choked ? 1 : machFromPR(Pt, Pe, g);
       const Te = Tt / (1 + (g - 1) / 2 * M * M);
@@ -1155,13 +1259,15 @@ TSFC = mdot_core*f/F_net</div>
         row("Pt_exit", `${fmt(Pt, 3)} kPa`),
         row("Pt_exit/Pamb", fmt(Pt / Pamb, 4)),
         row("Critical ratio", fmt(c, 4)),
-        row("Choked?", choked ? "yes" : "no"),
+        row("Mode", conv === 1 ? "converging nozzle: enforce choking" : "given exit pressure / CD nozzle check"),
+        row("Pressure ratio says choked?", ratioSaysChoked ? "yes" : "no"),
+        row("Final choked model?", choked ? "yes, M = 1" : "no, M from Pt/P"),
         row("Exit M", fmt(M, 4)),
         row("Exit P", `${fmt(Pe, 3)} kPa`),
         row("Exit T", `${fmt(Te, 3)} K`),
         row("Exit V", `${fmt(V, 3)} m/s`)
       ].join("");
-      $("no_copy").textContent = `Nozzle: ${choked ? "choked" : "not choked"}, M = ${fmt(M, 4)}, P_exit = ${fmt(Pe, 3)} kPa, V = ${fmt(V, 3)} m/s`;
+      $("no_copy").textContent = `Nozzle: ${choked ? "choked" : "M from given exit pressure"}, M = ${fmt(M, 4)}, P_exit = ${fmt(Pe, 3)} kPa, V = ${fmt(V, 3)} m/s`;
     }
 
     function calcTurbojet() {
