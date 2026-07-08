@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Propulsion Cycle Calculator</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #18202a;
+      --muted: #5e6a78;
+      --line: #d8dee6;
+      --accent: #0f766e;
+      --accent-2: #1d4ed8;
+      --warn: #9a3412;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    header {
+      padding: 18px 22px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 980px;
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #eef2f5;
+    }
+    .tab {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-weight: 650;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .tab.active {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(320px, 1fr);
+      gap: 16px;
+      padding: 18px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    section {
+      display: none;
+      contents: unset;
+    }
+    section.active { display: contents; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      min-width: 0;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 118px;
+      gap: 10px 12px;
+      align-items: center;
+    }
+    label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    input {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 8px;
+      font: inherit;
+      text-align: right;
+      background: #fbfcfd;
+      color: var(--ink);
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    button.action {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      min-height: 38px;
+      padding: 8px 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #fff;
+      color: var(--accent-2);
+      border-color: var(--accent-2);
+    }
+    .formula {
+      background: #f2f5f8;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      color: #26313e;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    .results {
+      display: grid;
+      gap: 8px;
+    }
+    .result-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(150px, auto);
+      gap: 10px;
+      border-bottom: 1px solid #edf0f4;
+      padding: 7px 0;
+      align-items: baseline;
+    }
+    .result-row strong {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .copyline {
+      margin-top: 12px;
+      border-left: 4px solid var(--accent);
+      background: #ecfdf5;
+      padding: 10px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .note {
+      margin-top: 12px;
+      color: var(--warn);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .wide-section { grid-column: 1 / -1; }
+    .wide-section.active { display: block; }
+    .wide-section.active .wide-layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(360px, 1fr);
+      gap: 16px;
+    }
+    .full-grid {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) 102px 82px;
+      gap: 8px;
+      align-items: center;
+    }
+    .full-grid .group {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155;
+      text-transform: uppercase;
+    }
+    .unit {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+      font-size: 12px;
+    }
+    th, td {
+      border-bottom: 1px solid #edf0f4;
+      padding: 7px 8px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    th:first-child, td:first-child { text-align: left; }
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 800;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: #475569;
+    }
+    .status.given { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .status.calculated { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .status.missing { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+    .status.check { background: #fefce8; color: #854d0e; border-color: #fde68a; }
+    .log {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .log-item {
+      border-left: 4px solid var(--line);
+      background: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 4px;
+    }
+    .log-item.missing { border-left-color: #f97316; }
+    .log-item.done { border-left-color: var(--accent); }
+    .log-item.check { border-left-color: #eab308; }
+    @media (max-width: 820px) {
+      main { grid-template-columns: 1fr; padding: 12px; }
+      .grid { grid-template-columns: 1fr; }
+      .wide-section.active .wide-layout { grid-template-columns: 1fr; }
+      .full-grid { grid-template-columns: 1fr; }
+      input { text-align: left; }
+      .result-row { grid-template-columns: 1fr; }
+      .result-row strong { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Propulsion Cycle Calculator</h1>
+    <div class="sub">Local exam helper for Exercise Set 5 style problems. Uses SI internally. Keep station values consistent and check nozzle choking before trusting thrust/efficiency answers.</div>
+  </header>
+
+  <nav class="tabs" aria-label="Calculator tabs">
+    <button class="tab active" data-tab="fullcycle">Full Cycle</button>
+    <button class="tab" data-tab="compressible">Compressible</button>
+    <button class="tab" data-tab="compressor">Compressor/Fan</button>
+    <button class="tab" data-tab="burner">Burner/AB</button>
+    <button class="tab" data-tab="turbine">Turbine</button>
+    <button class="tab" data-tab="nozzle">Nozzle</button>
+    <button class="tab" data-tab="turbojet">Turbojet</button>
+    <button class="tab" data-tab="turbofan">Turbofan</button>
+  </nav>
+
+  <main>
+    <section id="fullcycle" class="wide-section active">
+      <div class="wide-layout">
+        <div class="panel">
+          <h2>Full Cycle Missing-Value Solver</h2>
+          <div class="full-grid">
+            <div class="group">Freestream / station 0</div>
+            <label>M0</label><input id="fc_M0" value="0.8"><span class="unit">-</span>
+            <label>T0</label><input id="fc_T0" value="229"><span class="unit">K</span>
+            <label>P0</label><input id="fc_P0" value="29.92"><span class="unit">kPa</span>
+            <label>Tt0</label><input id="fc_Tt0" value=""><span class="unit">K</span>
+            <label>Pt0</label><input id="fc_Pt0" value=""><span class="unit">kPa</span>
+            <label>V0</label><input id="fc_V0" value=""><span class="unit">m/s</span>
+            <label>gamma air</label><input id="fc_gc" value="1.4"><span class="unit">-</span>
+            <label>cp air</label><input id="fc_cpc" value="1.004"><span class="unit">kJ/kg-K</span>
+            <label>R air</label><input id="fc_R" value="287"><span class="unit">J/kg-K</span>
+
+            <div class="group">Inlet / station 2</div>
+            <label>pi_d</label><input id="fc_pid" value="0.95"><span class="unit">Pt2/Pt0</span>
+            <label>Tt2</label><input id="fc_Tt2" value=""><span class="unit">K</span>
+            <label>Pt2</label><input id="fc_Pt2" value=""><span class="unit">kPa</span>
+            <label>air mdot</label><input id="fc_mdot" value="1"><span class="unit">kg/s</span>
+
+            <div class="group">Compressor / fan to station 3</div>
+            <label>pi_c</label><input id="fc_pic" value="9"><span class="unit">Pt3/Pt2</span>
+            <label>eta_c</label><input id="fc_etac" value="0.85"><span class="unit">-</span>
+            <label>Tt3</label><input id="fc_Tt3" value=""><span class="unit">K</span>
+            <label>Pt3</label><input id="fc_Pt3" value=""><span class="unit">kPa</span>
+            <label>comp power</label><input id="fc_Wc" value=""><span class="unit">kW</span>
+
+            <div class="group">Burner / station 4</div>
+            <label>Tt4</label><input id="fc_Tt4" value="1780"><span class="unit">K</span>
+            <label>Pt4</label><input id="fc_Pt4" value=""><span class="unit">kPa</span>
+            <label>pi_b</label><input id="fc_pib" value="0.94"><span class="unit">Pt4/Pt3</span>
+            <label>burner loss</label><input id="fc_dpb" value=""><span class="unit">kPa</span>
+            <label>eta_b</label><input id="fc_etab" value="0.99"><span class="unit">-</span>
+            <label>h_PR</label><input id="fc_hpr" value="42800"><span class="unit">kJ/kg</span>
+            <label>gamma gas</label><input id="fc_gt" value="1.3"><span class="unit">-</span>
+            <label>cp gas</label><input id="fc_cpt" value="1.239"><span class="unit">kJ/kg-K</span>
+            <label>f</label><input id="fc_f" value=""><span class="unit">kg/kg air</span>
+
+            <div class="group">Turbine / station 5</div>
+            <label>eta_m</label><input id="fc_etam" value="0.98"><span class="unit">-</span>
+            <label>eta_t</label><input id="fc_etat" value="0.88"><span class="unit">-</span>
+            <label>Tt5</label><input id="fc_Tt5" value=""><span class="unit">K</span>
+            <label>Pt5</label><input id="fc_Pt5" value=""><span class="unit">kPa</span>
+
+            <div class="group">Afterburner / station 7</div>
+            <label>Tt7</label><input id="fc_Tt7" value=""><span class="unit">K</span>
+            <label>Pt7</label><input id="fc_Pt7" value=""><span class="unit">kPa</span>
+            <label>pi_AB</label><input id="fc_piab" value=""><span class="unit">Pt7/Pt5</span>
+            <label>eta_AB</label><input id="fc_etaab" value=""><span class="unit">-</span>
+            <label>h_PR_AB</label><input id="fc_hprab" value=""><span class="unit">kJ/kg</span>
+            <label>gamma AB</label><input id="fc_gab" value=""><span class="unit">-</span>
+            <label>cp AB</label><input id="fc_cpab" value=""><span class="unit">kJ/kg-K</span>
+            <label>f_AB</label><input id="fc_fab" value=""><span class="unit">kg/kg air</span>
+
+            <div class="group">Nozzle / station 9</div>
+            <label>pi_n</label><input id="fc_pin" value="0.98"><span class="unit">Pt9/Pt in</span>
+            <label>P9 / ambient</label><input id="fc_P9" value="37.4"><span class="unit">kPa</span>
+            <label>T9</label><input id="fc_T9" value=""><span class="unit">K</span>
+            <label>Pt9</label><input id="fc_Pt9" value=""><span class="unit">kPa</span>
+            <label>M9</label><input id="fc_M9" value=""><span class="unit">-</span>
+            <label>V9</label><input id="fc_V9" value=""><span class="unit">m/s</span>
+            <label>eta_n</label><input id="fc_etan" value="1"><span class="unit">-</span>
+            <label>converging only</label><input id="fc_conv" value="0"><span class="unit">1 yes / 0 use P9</span>
+
+            <div class="group">Turbofan / final outputs</div>
+            <label>bypass ratio alpha</label><input id="fc_alpha" value=""><span class="unit">-</span>
+            <label>total mdot</label><input id="fc_mdot0" value=""><span class="unit">kg/s</span>
+            <label>bypass mdot</label><input id="fc_mdotb" value=""><span class="unit">kg/s</span>
+            <label>core mdot</label><input id="fc_mdotc" value=""><span class="unit">kg/s</span>
+            <label>V19</label><input id="fc_V19" value=""><span class="unit">m/s</span>
+            <label>P19</label><input id="fc_P19" value=""><span class="unit">kPa</span>
+            <label>T19</label><input id="fc_T19" value=""><span class="unit">K</span>
+            <label>pressure thrust</label><input id="fc_Fp" value="0"><span class="unit">N</span>
+          </div>
+          <div class="actions">
+            <button class="action" onclick="solveFullCycle()">Solve Available Values</button>
+            <button class="action secondary" onclick="loadProblem1()">Load Problem 1 Defaults</button>
+            <button class="action secondary" onclick="syncFullToManual()">Send to Manual Tabs</button>
+            <button class="action secondary" onclick="copyLine('fc_copy')">Copy final line</button>
+          </div>
+          <div class="note">Leave unknowns blank. The solver fills values only when one equation has enough known values. If a value is still missing, the log tells you exactly what dependency is missing.</div>
+        </div>
+
+        <div class="panel">
+          <h2>Station Table</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Station</th><th>T</th><th>P</th><th>Tt</th><th>Pt</th><th>M</th><th>V</th><th>mdot</th><th>f</th><th>gamma</th><th>cp</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="fc_station_rows"></tbody>
+            </table>
+          </div>
+          <h2 style="margin-top:16px;">Solved Outputs</h2>
+          <div class="results" id="fc_results"></div>
+          <div class="copyline" id="fc_copy"></div>
+          <div class="log" id="fc_log"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="compressible">
+      <div class="panel">
+        <h2>Compressible Flow Helper</h2>
+        <div class="grid">
+          <label>Static T, K</label><input id="cf_T" value="229">
+          <label>Static P, kPa</label><input id="cf_P" value="29.92">
+          <label>Mach</label><input id="cf_M" value="0.8">
+          <label>gamma</label><input id="cf_g" value="1.4">
+        </div>
+        <div class="actions">
+          <button class="action" onclick="calcCompressible()">Calculate</button>
+          <button class="action secondary" onclick="copyLine('cf_copy')">Copy final line</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Output</h2>
+        <div class="formula">Tt = T*(1 + (gamma - 1)/2*M^2)
+Pt = P*(Tt/T)^(gamma/(gamma - 1))
+Pt/P* = ((gamma + 1)/2)^(gamma/(gamma - 1))</div>
+        <div class="results" id="cf_results"></div>
+        <div class="copyline" id="cf_copy"></div>
+      </div>
+    </section>
+
+    <section id="compressor">
+      <div class="panel">
+        <h2>Compressor / Fan</h2>
+        <div class="grid">
+          <label>Inlet Tt, K</label><input id="co_Tin" value="258.312">
+          <label>Inlet Pt, kPa</label><input id="co_Pin" value="43.3278">
+          <label>Pressure ratio</label><input id="co_pi" value="9">
+          <label>Efficiency</label><input id="co_eta" value="0.85">
+          <label>gamma</label><input id="co_g" value="1.4">
+          <label>cp, kJ/kg-K</label><input id="co_cp" value="1.004">
+          <label>Mass flow, kg/s</label><input id="co_mdot" value="1">
+        </div>
+        <div class="actions">
+          <button class="action" onclick="calcCompressor()">Calculate</button>
+          <button class="action secondary" onclick="copyLine('co_copy')">Copy final line</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Output</h2>
+        <div class="formula">Tt_out_s = Tt_in*pi^((gamma - 1)/gamma)
+Tt_out = Tt_in + (Tt_out_s - Tt_in)/eta
+Pt_out = pi*Pt_in
+Power = mdot*cp*(Tt_out - Tt_in)</div>
+        <div class="results" id="co_results"></div>
+        <div class="copyline" id="co_copy"></div>
+      </div>
+    </section>
+
+    <section id="burner">
+      <div class="panel">
+        <h2>Burner / Afterburner</h2>
+        <div class="grid">
+          <label>cp before burner, kJ/kg-K</label><input id="bu_cpin" value="1.004">
+          <label>cp after burner, kJ/kg-K</label><input id="bu_cpout" value="1.239">
+          <label>Inlet Tt, K</label><input id="bu_Tin" value="523.7486">
+          <label>Outlet Tt, K</label><input id="bu_Tout" value="1780">
+          <label>Burner efficiency</label><input id="bu_eta" value="0.99">
+          <label>h_PR, kJ/kg</label><input id="bu_h" value="42800">
+          <label>Pressure ratio/loss factor</label><input id="bu_pi" value="0.94">
+          <label>Inlet Pt, kPa</label><input id="bu_Pin" value="389.9506">
+          <label>Existing f before AB</label><input id="bu_fprev" value="0">
+        </div>
+        <div class="actions">
+          <button class="action" onclick="calcBurner()">Calculate</button>
+          <button class="action secondary" onclick="copyLine('bu_copy')">Copy final line</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Output</h2>
+        <div class="formula">Main burner:
+f = (cp_out*Tt_out - cp_in*Tt_in)/(eta*h_PR - cp_out*Tt_out)
+
+Afterburner style, if existing f is nonzero:
+f_add = ((1 + f_prev)*(cp_out*Tt_out - cp_in*Tt_in))/(eta*h_PR - cp_out*Tt_out)
+
+Pt_out = pi_b*Pt_in</div>
+        <div class="results" id="bu_results"></div>
+        <div class="copyline" id="bu_copy"></div>
+      </div>
+    </section>
+
+    <section id="turbine">
+      <div class="panel">
+        <h2>Turbine Power Balance</h2>
+        <div class="grid">
+          <label>Turbine inlet Tt, K</label><input id="tu_Tin" value="1780">
+          <label>Turbine inlet Pt, kPa</label><input id="tu_Pin" value="366.5535">
+          <label>Compressor inlet Tt, K</label><input id="tu_Tc1" value="258.312">
+          <label>Compressor outlet Tt, K</label><input id="tu_Tc2" value="523.7486">
+          <label>cp compressor, kJ/kg-K</label><input id="tu_cpc" value="1.004">
+          <label>cp turbine, kJ/kg-K</label><input id="tu_cpt" value="1.239">
+          <label>Fuel-air ratio f</label><input id="tu_f" value="0.041815">
+          <label>Mechanical efficiency</label><input id="tu_etam" value="0.98">
+          <label>Turbine efficiency</label><input id="tu_etat" value="0.88">
+          <label>gamma turbine</label><input id="tu_g" value="1.3">
+        </div>
+        <div class="actions">
+          <button class="action" onclick="calcTurbine()">Calculate</button>
+          <button class="action secondary" onclick="copyLine('tu_copy')">Copy final line</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Output</h2>
+        <div class="formula">Tt_out = Tt_in - cp_c*(Tc_out - Tc_in)/(eta_m*(1 + f)*cp_t)
+Tt_out_s = Tt_in - (Tt_in - Tt_out)/eta_t
+Pt_out = Pt_in*(Tt_out_s/Tt_in)^(gamma/(gamma - 1))</div>
+        <div class="results" id="tu_results"></div>
+        <div class="copyline" id="tu_copy"></div>
+      </div>
+    </section>
+
+    <section id="nozzle">
+      <div class="panel">
+        <h2>Nozzle Choking / Exit Velocity</h2>
+        <div class="grid">
+          <label>Nozzle inlet Tt, K</label><input id="no_Tt" value="1569.328">
+          <label>Nozzle inlet Pt, kPa</label><input id="no_Pt" value="196.023">
+          <label>Total pressure ratio pi_n</label><input id="no_pi" value="0.98">
+          <label>Ambient/exit static P, kPa</label><input id="no_P" value="37.4">
+          <label>gamma</label><input id="no_g" value="1.3">
+          <label>cp, kJ/kg-K</label><input id="no_cp" value="1.239">
+          <label>Nozzle efficiency</label><input id="no_eta" value="1">
+        </div>
+        <div class="actions">
+          <button class="action" onclick="calcNozzle()">Calculate</button>
+          <button class="action secondary" onclick="copyLine('no_copy')">Copy final line</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Output</h2>
+        <div class="formula">Pt_exit = pi_n*Pt_in
+critical = ((gamma + 1)/2)^(gamma/(gamma - 1))
+If Pt_exit/Pamb >= critical: choked, M = 1
+If not choked: M from Pt/P
+V = sqrt(2*eta_n*cp*Tt*(1 - (P_exit/Pt_exit)^((gamma - 1)/gamma)))</div>
+        <div class="results" id="no_results"></div>
+        <div class="copyline" id="no_copy"></div>
+      </div>
+    </section>
+
+    <section id="turbojet">
+      <div class="panel">
+        <h2>Turbojet Specific Performance</h2>
+        <div class="grid">
+          <label>Flight velocity V0, m/s</label><input id="tj_V0" value="473.645">
+          <label>Exit velocity V9, m/s</label><input id="tj_V9" value="1400.915">
+          <label>Fuel-air ratio f</label><input id="tj_f" value="0.025349">
+          <label>Afterburner f_AB</label><input id="tj_fab" value="0.033273">
+          <label>h_PR main, kJ/kg</label><input id="tj_h" value="42000">
+          <label>h_PR AB, kJ/kg</label><input id="tj_hab" value="42000">
+        </div>
+        <div class="actions">
+          <button class="action" onclick="calcTurbojet()">Calculate</button>
+          <button class="action secondary" onclick="copyLine('tj_copy')">Copy final line</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Output</h2>
+        <div class="formula">Specific thrust = (1 + f + f_AB)*V9 - V0
+TSFC = (f + f_AB)/specific_thrust
+Jet power = 0.5*((1 + f + f_AB)*V9^2 - V0^2)
+eta_th = jet_power / ((f*h_PR + f_AB*h_PR_AB)*1000)
+eta_p = specific_thrust*V0/jet_power</div>
+        <div class="results" id="tj_results"></div>
+        <div class="copyline" id="tj_copy"></div>
+      </div>
+    </section>
+
+    <section id="turbofan">
+      <div class="panel">
+        <h2>Split-Flow Turbofan</h2>
+        <div class="grid">
+          <label>Flight velocity V0, m/s</label><input id="tf_V0" value="260.161">
+          <label>Fan exit velocity V19, m/s</label><input id="tf_V19" value="338.398">
+          <label>Core exit velocity V9, m/s</label><input id="tf_V9" value="458.055">
+          <label>Bypass mass flow, kg/s</label><input id="tf_mb" value="420">
+          <label>Core air mass flow, kg/s</label><input id="tf_mc" value="70">
+          <label>Fuel-air ratio f</label><input id="tf_f" value="0.015">
+          <label>Q_R, kJ/kg</label><input id="tf_h" value="42000">
+          <label>Pressure thrust, N</label><input id="tf_fp" value="0">
+        </div>
+        <div class="actions">
+          <button class="action" onclick="calcTurbofan()">Calculate</button>
+          <button class="action secondary" onclick="copyLine('tf_copy')">Copy final line</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Output</h2>
+        <div class="formula">F_fan = mdot_bypass*(V19 - V0)
+F_core = mdot_core*((1 + f)*V9 - V0)
+F_net = F_fan + F_core + pressure_thrust
+Jet power = 0.5*mdot_bypass*(V19^2 - V0^2) + 0.5*mdot_core*((1 + f)*V9^2 - V0^2)
+eta_th = jet_power/(mdot_core*f*Q_R*1000)
+eta_p = F_net*V0/jet_power
+TSFC = mdot_core*f/F_net</div>
+        <div class="results" id="tf_results"></div>
+        <div class="copyline" id="tf_copy"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const num = (id) => Number($(id).value);
+    const fmt = (value, digits = 4) => Number.isFinite(value) ? value.toFixed(digits) : "check input";
+    const row = (label, value) => `<div class="result-row"><span>${label}</span><strong>${value}</strong></div>`;
+    const crit = (g) => Math.pow((g + 1) / 2, g / (g - 1));
+    const machFromPR = (Pt, P, g) => Math.sqrt(Math.max(0, (2 / (g - 1)) * (Math.pow(Pt / P, (g - 1) / g) - 1)));
+
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll("section").forEach((s) => s.classList.remove("active"));
+        button.classList.add("active");
+        $(button.dataset.tab).classList.add("active");
+      });
+    });
+
+    async function copyLine(id) {
+      const text = $(id).textContent.trim();
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+    }
+
+    const fcIds = [
+      "M0","T0","P0","Tt0","Pt0","V0","gc","cpc","R","pid","Tt2","Pt2","mdot",
+      "pic","etac","Tt3","Pt3","Wc","Tt4","Pt4","pib","dpb","etab","hpr","gt","cpt","f",
+      "etam","etat","Tt5","Pt5","Tt7","Pt7","piab","etaab","hprab","gab","cpab","fab",
+      "pin","P9","T9","Pt9","M9","V9","etan","conv","alpha","mdot0","mdotb","mdotc","V19","P19","T19","Fp"
+    ];
+    const stationList = ["0", "2", "3", "4", "5", "7", "9", "13", "19"];
+
+    function blankToNaN(value) {
+      const text = String(value ?? "").trim();
+      return text === "" ? NaN : Number(text);
+    }
+
+    function readFullCycle() {
+      const s = {};
+      fcIds.forEach((id) => {
+        const input = $("fc_" + id);
+        s[id] = input ? blankToNaN(input.value) : NaN;
+      });
+      return s;
+    }
+
+    function writeFullCycle(s, statusMap) {
+      fcIds.forEach((id) => {
+        const input = $("fc_" + id);
+        if (!input || !Number.isFinite(s[id])) return;
+        const current = String(input.value ?? "").trim();
+        if (current === "" || statusMap[id] === "calculated") {
+          input.value = String(Number(s[id].toFixed(6)));
+        }
+      });
+    }
+
+    function isKnown(s, key) {
+      return Number.isFinite(s[key]);
+    }
+
+    function setCalc(s, statusMap, key, value) {
+      if (!Number.isFinite(value)) return false;
+      if (isKnown(s, key)) return false;
+      s[key] = value;
+      statusMap[key] = "calculated";
+      return true;
+    }
+
+    function markInitialStatus(s) {
+      const statusMap = {};
+      fcIds.forEach((id) => {
+        const input = $("fc_" + id);
+        statusMap[id] = input && String(input.value ?? "").trim() !== "" ? "given" : "missing";
+      });
+      Object.keys(s).forEach((key) => {
+        if (Number.isFinite(s[key]) && statusMap[key] !== "given") statusMap[key] = "calculated";
+      });
+      return statusMap;
+    }
+
+    function addLog(logs, type, text) {
+      logs.push({ type, text });
+    }
+
+    function solveFullCycle() {
+      const s = readFullCycle();
+      const statusMap = markInitialStatus(s);
+      const logs = [];
+      let changed = true;
+      let guard = 0;
+
+      while (changed && guard < 12) {
+        changed = false;
+        guard += 1;
+
+        if (isKnown(s, "T0") && isKnown(s, "M0") && isKnown(s, "gc")) {
+          changed = setCalc(s, statusMap, "Tt0", s.T0 * (1 + (s.gc - 1) / 2 * s.M0 * s.M0)) || changed;
+        }
+        if (isKnown(s, "Tt0") && isKnown(s, "T0") && isKnown(s, "gc") && !isKnown(s, "M0")) {
+          changed = setCalc(s, statusMap, "M0", Math.sqrt(Math.max(0, 2 / (s.gc - 1) * (s.Tt0 / s.T0 - 1)))) || changed;
+        }
+        if (isKnown(s, "Tt0") && isKnown(s, "M0") && isKnown(s, "gc") && !isKnown(s, "T0")) {
+          changed = setCalc(s, statusMap, "T0", s.Tt0 / (1 + (s.gc - 1) / 2 * s.M0 * s.M0)) || changed;
+        }
+        if (isKnown(s, "Tt0") && isKnown(s, "T0") && isKnown(s, "P0") && isKnown(s, "gc")) {
+          changed = setCalc(s, statusMap, "Pt0", s.P0 * Math.pow(s.Tt0 / s.T0, s.gc / (s.gc - 1))) || changed;
+        }
+        if (isKnown(s, "Pt0") && isKnown(s, "Tt0") && isKnown(s, "T0") && isKnown(s, "gc") && !isKnown(s, "P0")) {
+          changed = setCalc(s, statusMap, "P0", s.Pt0 / Math.pow(s.Tt0 / s.T0, s.gc / (s.gc - 1))) || changed;
+        }
+        if (isKnown(s, "M0") && isKnown(s, "T0") && isKnown(s, "gc") && isKnown(s, "R")) {
+          changed = setCalc(s, statusMap, "V0", s.M0 * Math.sqrt(s.gc * s.R * s.T0)) || changed;
+        }
+
+        changed = setCalc(s, statusMap, "Tt2", s.Tt0) || changed;
+        if (isKnown(s, "Pt0") && isKnown(s, "pid")) changed = setCalc(s, statusMap, "Pt2", s.pid * s.Pt0) || changed;
+        if (isKnown(s, "Pt2") && isKnown(s, "Pt0") && !isKnown(s, "pid")) changed = setCalc(s, statusMap, "pid", s.Pt2 / s.Pt0) || changed;
+        if (isKnown(s, "Pt2") && isKnown(s, "pid") && !isKnown(s, "Pt0")) changed = setCalc(s, statusMap, "Pt0", s.Pt2 / s.pid) || changed;
+
+        if (isKnown(s, "Pt2") && isKnown(s, "pic")) changed = setCalc(s, statusMap, "Pt3", s.Pt2 * s.pic) || changed;
+        if (isKnown(s, "Pt3") && isKnown(s, "Pt2") && !isKnown(s, "pic")) changed = setCalc(s, statusMap, "pic", s.Pt3 / s.Pt2) || changed;
+        if (isKnown(s, "Tt2") && isKnown(s, "pic") && isKnown(s, "gc") && isKnown(s, "etac")) {
+          const Tt3s = s.Tt2 * Math.pow(s.pic, (s.gc - 1) / s.gc);
+          changed = setCalc(s, statusMap, "Tt3", s.Tt2 + (Tt3s - s.Tt2) / s.etac) || changed;
+        }
+        if (isKnown(s, "Tt2") && isKnown(s, "Tt3") && isKnown(s, "pic") && isKnown(s, "gc") && !isKnown(s, "etac")) {
+          const Tt3s = s.Tt2 * Math.pow(s.pic, (s.gc - 1) / s.gc);
+          changed = setCalc(s, statusMap, "etac", (Tt3s - s.Tt2) / (s.Tt3 - s.Tt2)) || changed;
+        }
+        if (isKnown(s, "Tt2") && isKnown(s, "Tt3") && isKnown(s, "etac") && isKnown(s, "gc") && !isKnown(s, "pic")) {
+          const Tt3s = s.Tt2 + s.etac * (s.Tt3 - s.Tt2);
+          changed = setCalc(s, statusMap, "pic", Math.pow(Tt3s / s.Tt2, s.gc / (s.gc - 1))) || changed;
+        }
+        if (isKnown(s, "mdot") && isKnown(s, "cpc") && isKnown(s, "Tt3") && isKnown(s, "Tt2")) {
+          changed = setCalc(s, statusMap, "Wc", s.mdot * s.cpc * (s.Tt3 - s.Tt2)) || changed;
+        }
+
+        if (isKnown(s, "Pt3") && isKnown(s, "pib")) changed = setCalc(s, statusMap, "Pt4", s.Pt3 * s.pib) || changed;
+        if (isKnown(s, "Pt3") && isKnown(s, "dpb")) changed = setCalc(s, statusMap, "Pt4", s.Pt3 - s.dpb) || changed;
+        if (isKnown(s, "Pt4") && isKnown(s, "Pt3") && !isKnown(s, "pib")) changed = setCalc(s, statusMap, "pib", s.Pt4 / s.Pt3) || changed;
+        if (isKnown(s, "Pt4") && isKnown(s, "Pt3") && !isKnown(s, "dpb")) changed = setCalc(s, statusMap, "dpb", s.Pt3 - s.Pt4) || changed;
+
+        if (isKnown(s, "cpt") && isKnown(s, "Tt4") && isKnown(s, "cpc") && isKnown(s, "Tt3") && isKnown(s, "etab") && isKnown(s, "hpr")) {
+          changed = setCalc(s, statusMap, "f", (s.cpt * s.Tt4 - s.cpc * s.Tt3) / (s.etab * s.hpr - s.cpt * s.Tt4)) || changed;
+        }
+        if (isKnown(s, "f") && isKnown(s, "cpt") && isKnown(s, "Tt4") && isKnown(s, "cpc") && isKnown(s, "Tt3") && isKnown(s, "hpr") && !isKnown(s, "etab")) {
+          changed = setCalc(s, statusMap, "etab", (s.cpt * s.Tt4 - s.cpc * s.Tt3 + s.f * s.cpt * s.Tt4) / (s.f * s.hpr)) || changed;
+        }
+        if (isKnown(s, "f") && isKnown(s, "cpt") && isKnown(s, "cpc") && isKnown(s, "Tt3") && isKnown(s, "etab") && isKnown(s, "hpr") && !isKnown(s, "Tt4")) {
+          changed = setCalc(s, statusMap, "Tt4", (s.f * s.etab * s.hpr + s.cpc * s.Tt3) / (s.cpt * (1 + s.f))) || changed;
+        }
+
+        if (isKnown(s, "Tt4") && isKnown(s, "cpc") && isKnown(s, "Tt3") && isKnown(s, "Tt2") && isKnown(s, "etam") && isKnown(s, "f") && isKnown(s, "cpt")) {
+          changed = setCalc(s, statusMap, "Tt5", s.Tt4 - s.cpc * (s.Tt3 - s.Tt2) / (s.etam * (1 + s.f) * s.cpt)) || changed;
+        }
+        if (isKnown(s, "Tt4") && isKnown(s, "Tt5") && isKnown(s, "cpc") && isKnown(s, "Tt3") && isKnown(s, "Tt2") && isKnown(s, "f") && isKnown(s, "cpt") && !isKnown(s, "etam")) {
+          changed = setCalc(s, statusMap, "etam", s.cpc * (s.Tt3 - s.Tt2) / ((s.Tt4 - s.Tt5) * (1 + s.f) * s.cpt)) || changed;
+        }
+        if (isKnown(s, "Pt4") && isKnown(s, "Tt4") && isKnown(s, "Tt5") && isKnown(s, "etat") && isKnown(s, "gt")) {
+          const Tt5s = s.Tt4 - (s.Tt4 - s.Tt5) / s.etat;
+          changed = setCalc(s, statusMap, "Pt5", s.Pt4 * Math.pow(Tt5s / s.Tt4, s.gt / (s.gt - 1))) || changed;
+        }
+        if (isKnown(s, "Pt5") && isKnown(s, "Pt4") && isKnown(s, "Tt4") && isKnown(s, "Tt5") && isKnown(s, "gt") && !isKnown(s, "etat")) {
+          const Tt5s = s.Tt4 * Math.pow(s.Pt5 / s.Pt4, (s.gt - 1) / s.gt);
+          changed = setCalc(s, statusMap, "etat", (s.Tt4 - s.Tt5) / (s.Tt4 - Tt5s)) || changed;
+        }
+
+        if (isKnown(s, "Pt5") && isKnown(s, "piab")) changed = setCalc(s, statusMap, "Pt7", s.Pt5 * s.piab) || changed;
+        if (isKnown(s, "Pt7") && isKnown(s, "Pt5") && !isKnown(s, "piab")) changed = setCalc(s, statusMap, "piab", s.Pt7 / s.Pt5) || changed;
+        if (isKnown(s, "Tt7") && isKnown(s, "Tt5") && isKnown(s, "cpab") && isKnown(s, "cpt") && isKnown(s, "f") && isKnown(s, "etaab") && isKnown(s, "hprab")) {
+          changed = setCalc(s, statusMap, "fab", ((1 + s.f) * (s.cpab * s.Tt7 - s.cpt * s.Tt5)) / (s.etaab * s.hprab - s.cpab * s.Tt7)) || changed;
+        }
+        if (isKnown(s, "fab") && isKnown(s, "Tt7") && isKnown(s, "Tt5") && isKnown(s, "cpab") && isKnown(s, "cpt") && isKnown(s, "f") && isKnown(s, "hprab") && !isKnown(s, "etaab")) {
+          changed = setCalc(s, statusMap, "etaab", (((1 + s.f) * (s.cpab * s.Tt7 - s.cpt * s.Tt5)) / s.fab + s.cpab * s.Tt7) / s.hprab) || changed;
+        }
+
+        const nozzleTt = isKnown(s, "Tt7") ? s.Tt7 : s.Tt5;
+        const nozzlePtIn = isKnown(s, "Pt7") ? s.Pt7 : s.Pt5;
+        const nozzleGamma = isKnown(s, "gab") ? s.gab : s.gt;
+        const nozzleCp = isKnown(s, "cpab") ? s.cpab : s.cpt;
+        if (Number.isFinite(nozzlePtIn) && isKnown(s, "pin")) changed = setCalc(s, statusMap, "Pt9", nozzlePtIn * s.pin) || changed;
+        if (isKnown(s, "Pt9") && Number.isFinite(nozzlePtIn) && !isKnown(s, "pin")) changed = setCalc(s, statusMap, "pin", s.Pt9 / nozzlePtIn) || changed;
+        if (isKnown(s, "Pt9") && isKnown(s, "P9") && Number.isFinite(nozzleGamma)) {
+          const c = crit(nozzleGamma);
+          const choked = s.Pt9 / s.P9 >= c && s.conv === 1;
+          changed = setCalc(s, statusMap, "M9", choked ? 1 : machFromPR(s.Pt9, s.P9, nozzleGamma)) || changed;
+          if (choked) statusMap.M9 = statusMap.M9 === "given" ? "given" : "calculated";
+        }
+        if (isKnown(s, "M9") && Number.isFinite(nozzleTt) && Number.isFinite(nozzleGamma)) {
+          changed = setCalc(s, statusMap, "T9", nozzleTt / (1 + (nozzleGamma - 1) / 2 * s.M9 * s.M9)) || changed;
+        }
+        if (isKnown(s, "T9") && isKnown(s, "M9") && Number.isFinite(nozzleGamma) && isKnown(s, "R")) {
+          changed = setCalc(s, statusMap, "V9", s.M9 * Math.sqrt(nozzleGamma * s.R * s.T9)) || changed;
+        }
+        if (!isKnown(s, "V9") && isKnown(s, "Pt9") && isKnown(s, "P9") && Number.isFinite(nozzleTt) && Number.isFinite(nozzleGamma) && Number.isFinite(nozzleCp) && isKnown(s, "etan")) {
+          const pe = s.Pt9 / s.P9 >= crit(nozzleGamma) && s.conv === 1 ? s.Pt9 / crit(nozzleGamma) : s.P9;
+          changed = setCalc(s, statusMap, "V9", Math.sqrt(2 * s.etan * nozzleCp * 1000 * nozzleTt * (1 - Math.pow(pe / s.Pt9, (nozzleGamma - 1) / nozzleGamma)))) || changed;
+        }
+
+        if (isKnown(s, "mdot0") && isKnown(s, "alpha")) {
+          changed = setCalc(s, statusMap, "mdotc", s.mdot0 / (1 + s.alpha)) || changed;
+          changed = setCalc(s, statusMap, "mdotb", s.mdot0 * s.alpha / (1 + s.alpha)) || changed;
+        }
+        if (isKnown(s, "mdotb") && isKnown(s, "mdotc") && !isKnown(s, "alpha")) changed = setCalc(s, statusMap, "alpha", s.mdotb / s.mdotc) || changed;
+        if (isKnown(s, "mdotb") && isKnown(s, "mdotc") && !isKnown(s, "mdot0")) changed = setCalc(s, statusMap, "mdot0", s.mdotb + s.mdotc) || changed;
+      }
+
+      summarizeFullCycle(s, statusMap, logs);
+      writeFullCycle(s, statusMap);
+      renderStationTable(s, statusMap);
+      renderFullCycleResults(s, statusMap, logs);
+    }
+
+    function summarizeFullCycle(s, statusMap, logs) {
+      addLog(logs, "done", "Solved every value that has enough inputs from the current equations.");
+      const missingRules = [
+        ["Tt0", "Need any two of T0, M0, and Tt0 plus gamma air."],
+        ["Pt0", "Need P0 plus Tt0/T0 and gamma air, or give Pt0 directly."],
+        ["V0", "Need M0, T0, gamma air, and R."],
+        ["Pt2", "Need Pt0 and inlet pressure recovery pi_d."],
+        ["Tt3", "Need Tt2, compressor pressure ratio pi_c, compressor efficiency eta_c, and gamma air."],
+        ["Pt3", "Need Pt2 and pressure ratio pi_c, or give Pt3 directly."],
+        ["f", "Need Tt3, Tt4, cp air, cp gas, eta_b, and h_PR."],
+        ["Pt4", "Need Pt3 plus burner pressure ratio pi_b or absolute pressure loss."],
+        ["Tt5", "Need Tt4, Tt3, Tt2, f, cp values, and mechanical efficiency."],
+        ["Pt5", "Need Pt4, Tt4, Tt5, turbine efficiency, and gamma gas."],
+        ["fab", "Need Tt5, Tt7, cp values, f, eta_AB, and h_PR_AB."],
+        ["M9", "Need nozzle total pressure Pt9, exit/ambient pressure P9, and nozzle gamma."],
+        ["V9", "Need M9 and T9, or Pt9/P9 plus nozzle total temperature, cp, gamma, and eta_n."]
+      ];
+      missingRules.forEach(([key, text]) => {
+        if (!isKnown(s, key)) addLog(logs, "missing", `${key}: ${text}`);
+      });
+      if (isKnown(s, "Pt9") && isKnown(s, "P9")) {
+        const g = isKnown(s, "gab") ? s.gab : s.gt;
+        if (Number.isFinite(g)) {
+          const choked = s.Pt9 / s.P9 >= crit(g);
+          const mode = s.conv === 1 ? "converging-only mode" : "given-exit-pressure mode";
+          addLog(logs, "check", `Nozzle check: Pt9/P9 = ${fmt(s.Pt9 / s.P9, 4)}, critical = ${fmt(crit(g), 4)}. In ${mode}: ${choked && s.conv === 1 ? "choked, M9 = 1" : "M9 solved from the given exit pressure"}.`);
+        }
+      }
+    }
+
+    function stationRow(label, values, status) {
+      const cell = (v, digits = 3) => Number.isFinite(v) ? fmt(v, digits) : "-";
+      const statusClass = status === "given" ? "given" : status === "calculated" ? "calculated" : status === "check" ? "check" : "missing";
+      return `<tr><td>${label}</td><td>${cell(values.T)}</td><td>${cell(values.P)}</td><td>${cell(values.Tt)}</td><td>${cell(values.Pt)}</td><td>${cell(values.M, 4)}</td><td>${cell(values.V)}</td><td>${cell(values.mdot)}</td><td>${cell(values.f, 5)}</td><td>${cell(values.g, 3)}</td><td>${cell(values.cp, 4)}</td><td><span class="status ${statusClass}">${status}</span></td></tr>`;
+    }
+
+    function rowStatus(keys, s, statusMap) {
+      const known = keys.filter((key) => Number.isFinite(s[key]));
+      if (!known.length) return "missing";
+      if (known.some((key) => statusMap[key] === "calculated")) return "calculated";
+      return "given";
+    }
+
+    function renderStationTable(s, statusMap) {
+      const coreMdot = isKnown(s, "mdotc") ? s.mdotc : s.mdot;
+      const fTotal = (isKnown(s, "f") ? s.f : 0) + (isKnown(s, "fab") ? s.fab : 0);
+      const rows = [
+        stationRow("0 free", { T: s.T0, P: s.P0, Tt: s.Tt0, Pt: s.Pt0, M: s.M0, V: s.V0, mdot: s.mdot0 || s.mdot, f: 0, g: s.gc, cp: s.cpc }, rowStatus(["T0","P0","Tt0","Pt0","M0","V0"], s, statusMap)),
+        stationRow("2 inlet", { Tt: s.Tt2, Pt: s.Pt2, mdot: s.mdot, f: 0, g: s.gc, cp: s.cpc }, rowStatus(["Tt2","Pt2"], s, statusMap)),
+        stationRow("3 compressor", { Tt: s.Tt3, Pt: s.Pt3, mdot: s.mdot, f: 0, g: s.gc, cp: s.cpc }, rowStatus(["Tt3","Pt3"], s, statusMap)),
+        stationRow("4 burner", { Tt: s.Tt4, Pt: s.Pt4, mdot: coreMdot, f: s.f, g: s.gt, cp: s.cpt }, rowStatus(["Tt4","Pt4","f"], s, statusMap)),
+        stationRow("5 turbine", { Tt: s.Tt5, Pt: s.Pt5, mdot: coreMdot, f: s.f, g: s.gt, cp: s.cpt }, rowStatus(["Tt5","Pt5"], s, statusMap)),
+        stationRow("7 afterburner", { Tt: s.Tt7, Pt: s.Pt7, mdot: coreMdot, f: fTotal || NaN, g: s.gab || s.gt, cp: s.cpab || s.cpt }, rowStatus(["Tt7","Pt7","fab"], s, statusMap)),
+        stationRow("9 core nozzle", { T: s.T9, P: s.P9, Tt: s.Tt7 || s.Tt5, Pt: s.Pt9, M: s.M9, V: s.V9, mdot: coreMdot, f: fTotal || s.f, g: s.gab || s.gt, cp: s.cpab || s.cpt }, rowStatus(["T9","P9","Pt9","M9","V9"], s, statusMap)),
+        stationRow("13 bypass/fan", { mdot: s.mdotb, g: s.gc, cp: s.cpc }, rowStatus(["mdotb"], s, statusMap)),
+        stationRow("19 bypass nozzle", { T: s.T19, P: s.P19, V: s.V19, mdot: s.mdotb, g: s.gc, cp: s.cpc }, rowStatus(["T19","P19","V19"], s, statusMap))
+      ];
+      $("fc_station_rows").innerHTML = rows.join("");
+    }
+
+    function renderFullCycleResults(s, statusMap, logs) {
+      const fTotal = (isKnown(s, "f") ? s.f : 0) + (isKnown(s, "fab") ? s.fab : 0);
+      const hasTurbojet = isKnown(s, "V0") && isKnown(s, "V9") && fTotal > 0;
+      const specificThrust = hasTurbojet ? (1 + fTotal) * s.V9 - s.V0 : NaN;
+      const tsfc = hasTurbojet ? fTotal / specificThrust * 1e6 : NaN;
+      const fuelPower = hasTurbojet ? ((isKnown(s, "f") ? s.f * s.hpr : 0) + (isKnown(s, "fab") ? s.fab * (s.hprab || s.hpr) : 0)) * 1000 : NaN;
+      const jetPower = hasTurbojet ? 0.5 * ((1 + fTotal) * s.V9 * s.V9 - s.V0 * s.V0) : NaN;
+      const etaTh = Number.isFinite(fuelPower) && fuelPower !== 0 ? jetPower / fuelPower : NaN;
+      const etaP = Number.isFinite(jetPower) && jetPower !== 0 ? specificThrust * s.V0 / jetPower : NaN;
+      const hasFan = isKnown(s, "V19") && isKnown(s, "mdotb") && isKnown(s, "V0");
+      const fanThrust = hasFan ? s.mdotb * (s.V19 - s.V0) : NaN;
+      const coreThrust = isKnown(s, "mdotc") && hasTurbojet ? s.mdotc * specificThrust : NaN;
+      const netThrust = Number.isFinite(fanThrust) || Number.isFinite(coreThrust) ? (Number.isFinite(fanThrust) ? fanThrust : 0) + (Number.isFinite(coreThrust) ? coreThrust : 0) + (s.Fp || 0) : NaN;
+
+      $("fc_results").innerHTML = [
+        row("Specific thrust", Number.isFinite(specificThrust) ? `${fmt(specificThrust, 3)} N/(kg/s)` : "missing V0, V9, or fuel ratio"),
+        row("TSFC", Number.isFinite(tsfc) ? `${fmt(tsfc, 3)} mg/s/N` : "missing thrust/fuel"),
+        row("Thermal efficiency", Number.isFinite(etaTh) ? `${fmt(etaTh * 100, 2)}%` : "missing fuel heating value or jet velocity"),
+        row("Propulsive efficiency", Number.isFinite(etaP) ? `${fmt(etaP * 100, 2)}%` : "missing thrust convention or jet power"),
+        row("Fan thrust", Number.isFinite(fanThrust) ? `${fmt(fanThrust / 1000, 3)} kN` : "optional turbofan value missing"),
+        row("Net thrust", Number.isFinite(netThrust) ? `${fmt(netThrust / 1000, 3)} kN` : "missing mass flow or velocities")
+      ].join("");
+      $("fc_copy").textContent = `Full cycle: Tt3=${fmt(s.Tt3, 3)} K, Pt3=${fmt(s.Pt3, 3)} kPa, f=${fmt(s.f, 6)}, Tt5=${fmt(s.Tt5, 3)} K, Pt5=${fmt(s.Pt5, 3)} kPa, M9=${fmt(s.M9, 4)}, V9=${fmt(s.V9, 3)} m/s, specific thrust=${fmt(specificThrust, 3)} N/(kg/s)`;
+      $("fc_log").innerHTML = logs.map((item) => `<div class="log-item ${item.type}">${item.text}</div>`).join("");
+    }
+
+    function loadProblem1() {
+      const defaults = {
+        M0: 0.8, T0: 229, P0: 29.92, gc: 1.4, cpc: 1.004, R: 287, pid: 0.95, mdot: 1,
+        pic: 9, etac: 0.85, Tt4: 1780, pib: 0.94, etab: 0.99, hpr: 42800, gt: 1.3,
+        cpt: 1.239, etam: 0.98, etat: 0.88, pin: 0.98, P9: 37.4, etan: 1, conv: 0
+      };
+      fcIds.forEach((id) => {
+        const input = $("fc_" + id);
+        if (input) input.value = defaults[id] ?? "";
+      });
+      solveFullCycle();
+    }
+
+    function syncFullToManual() {
+      const s = readFullCycle();
+      const put = (id, value) => {
+        if ($(id) && Number.isFinite(value)) $(id).value = String(Number(value.toFixed(6)));
+      };
+      put("cf_T", s.T0); put("cf_P", s.P0); put("cf_M", s.M0); put("cf_g", s.gc);
+      put("co_Tin", s.Tt2); put("co_Pin", s.Pt2); put("co_pi", s.pic); put("co_eta", s.etac); put("co_g", s.gc); put("co_cp", s.cpc); put("co_mdot", s.mdot);
+      put("bu_cpin", s.cpc); put("bu_cpout", s.cpt); put("bu_Tin", s.Tt3); put("bu_Tout", s.Tt4); put("bu_eta", s.etab); put("bu_h", s.hpr); put("bu_pi", s.pib); put("bu_Pin", s.Pt3);
+      put("tu_Tin", s.Tt4); put("tu_Pin", s.Pt4); put("tu_Tc1", s.Tt2); put("tu_Tc2", s.Tt3); put("tu_cpc", s.cpc); put("tu_cpt", s.cpt); put("tu_f", s.f); put("tu_etam", s.etam); put("tu_etat", s.etat); put("tu_g", s.gt);
+      put("no_Tt", s.Tt7 || s.Tt5); put("no_Pt", s.Pt7 || s.Pt5); put("no_pi", s.pin); put("no_P", s.P9); put("no_g", s.gab || s.gt); put("no_cp", s.cpab || s.cpt); put("no_eta", s.etan);
+      put("tj_V0", s.V0); put("tj_V9", s.V9); put("tj_f", s.f); put("tj_fab", s.fab || 0); put("tj_h", s.hpr); put("tj_hab", s.hprab || s.hpr);
+      put("tf_V0", s.V0); put("tf_V19", s.V19); put("tf_V9", s.V9); put("tf_mb", s.mdotb); put("tf_mc", s.mdotc); put("tf_f", (s.f || 0) + (s.fab || 0)); put("tf_h", s.hpr); put("tf_fp", s.Fp || 0);
+      calcCompressible(); calcCompressor(); calcBurner(); calcTurbine(); calcNozzle(); calcTurbojet(); calcTurbofan();
+    }
+
+    function calcCompressible() {
+      const T = num("cf_T"), P = num("cf_P"), M = num("cf_M"), g = num("cf_g");
+      const Tt = T * (1 + (g - 1) / 2 * M * M);
+      const Pt = P * Math.pow(Tt / T, g / (g - 1));
+      const c = crit(g);
+      $("cf_results").innerHTML = [
+        row("Tt", `${fmt(Tt, 3)} K`),
+        row("Pt", `${fmt(Pt, 3)} kPa`),
+        row("Critical Pt/P*", fmt(c, 4)),
+        row("Current Pt/P", fmt(Pt / P, 4))
+      ].join("");
+      $("cf_copy").textContent = `Tt = ${fmt(Tt, 3)} K, Pt = ${fmt(Pt, 3)} kPa, critical Pt/P = ${fmt(c, 4)}`;
+    }
+
+    function calcCompressor() {
+      const Tin = num("co_Tin"), Pin = num("co_Pin"), pi = num("co_pi"), eta = num("co_eta"), g = num("co_g"), cp = num("co_cp"), mdot = num("co_mdot");
+      const Ts = Tin * Math.pow(pi, (g - 1) / g);
+      const Tout = Tin + (Ts - Tin) / eta;
+      const Pout = Pin * pi;
+      const power = mdot * cp * (Tout - Tin);
+      $("co_results").innerHTML = [
+        row("Tt_out_s", `${fmt(Ts, 3)} K`),
+        row("Tt_out", `${fmt(Tout, 3)} K`),
+        row("Pt_out", `${fmt(Pout, 3)} kPa`),
+        row("Power", `${fmt(power, 3)} kW if cp in kJ/kg-K`)
+      ].join("");
+      $("co_copy").textContent = `Compressor/fan exit: Tt = ${fmt(Tout, 3)} K, Pt = ${fmt(Pout, 3)} kPa, power = ${fmt(power, 3)} kW`;
+    }
+
+    function calcBurner() {
+      const cpin = num("bu_cpin"), cpout = num("bu_cpout"), Tin = num("bu_Tin"), Tout = num("bu_Tout");
+      const eta = num("bu_eta"), h = num("bu_h"), pi = num("bu_pi"), Pin = num("bu_Pin"), fprev = num("bu_fprev");
+      const fMain = (cpout * Tout - cpin * Tin) / (eta * h - cpout * Tout);
+      const fAdd = ((1 + fprev) * (cpout * Tout - cpin * Tin)) / (eta * h - cpout * Tout);
+      const Pout = pi * Pin;
+      $("bu_results").innerHTML = [
+        row("Main burner f", fmt(fMain, 6)),
+        row("Added f with previous fuel", fmt(fAdd, 6)),
+        row("Pt_out", `${fmt(Pout, 3)} kPa`)
+      ].join("");
+      $("bu_copy").textContent = `Burner: f = ${fmt(fMain, 6)}, f_add = ${fmt(fAdd, 6)}, Pt_out = ${fmt(Pout, 3)} kPa`;
+    }
+
+    function calcTurbine() {
+      const Tin = num("tu_Tin"), Pin = num("tu_Pin"), Tc1 = num("tu_Tc1"), Tc2 = num("tu_Tc2");
+      const cpc = num("tu_cpc"), cpt = num("tu_cpt"), f = num("tu_f"), etam = num("tu_etam"), etat = num("tu_etat"), g = num("tu_g");
+      const Tout = Tin - cpc * (Tc2 - Tc1) / (etam * (1 + f) * cpt);
+      const Touts = Tin - (Tin - Tout) / etat;
+      const Pout = Pin * Math.pow(Touts / Tin, g / (g - 1));
+      $("tu_results").innerHTML = [
+        row("Tt_out", `${fmt(Tout, 3)} K`),
+        row("Tt_out_s", `${fmt(Touts, 3)} K`),
+        row("Pt_out", `${fmt(Pout, 3)} kPa`)
+      ].join("");
+      $("tu_copy").textContent = `Turbine exit: Tt = ${fmt(Tout, 3)} K, Pt = ${fmt(Pout, 3)} kPa`;
+    }
+
+    function calcNozzle() {
+      const Tt = num("no_Tt"), PtIn = num("no_Pt"), pi = num("no_pi"), Pamb = num("no_P"), g = num("no_g"), cp = num("no_cp") * 1000, eta = num("no_eta");
+      const Pt = PtIn * pi;
+      const c = crit(g);
+      const choked = Pt / Pamb >= c;
+      const Pe = choked ? Pt / c : Pamb;
+      const M = choked ? 1 : machFromPR(Pt, Pe, g);
+      const Te = Tt / (1 + (g - 1) / 2 * M * M);
+      const V = Math.sqrt(2 * eta * cp * Tt * (1 - Math.pow(Pe / Pt, (g - 1) / g)));
+      $("no_results").innerHTML = [
+        row("Pt_exit", `${fmt(Pt, 3)} kPa`),
+        row("Pt_exit/Pamb", fmt(Pt / Pamb, 4)),
+        row("Critical ratio", fmt(c, 4)),
+        row("Choked?", choked ? "yes" : "no"),
+        row("Exit M", fmt(M, 4)),
+        row("Exit P", `${fmt(Pe, 3)} kPa`),
+        row("Exit T", `${fmt(Te, 3)} K`),
+        row("Exit V", `${fmt(V, 3)} m/s`)
+      ].join("");
+      $("no_copy").textContent = `Nozzle: ${choked ? "choked" : "not choked"}, M = ${fmt(M, 4)}, P_exit = ${fmt(Pe, 3)} kPa, V = ${fmt(V, 3)} m/s`;
+    }
+
+    function calcTurbojet() {
+      const V0 = num("tj_V0"), V9 = num("tj_V9"), f = num("tj_f"), fab = num("tj_fab"), h = num("tj_h"), hab = num("tj_hab");
+      const Fsp = (1 + f + fab) * V9 - V0;
+      const fuel = f + fab;
+      const tsfc = fuel / Fsp * 1e6;
+      const jetPower = 0.5 * ((1 + f + fab) * V9 * V9 - V0 * V0);
+      const etaTh = jetPower / ((f * h + fab * hab) * 1000);
+      const etaP = Fsp * V0 / jetPower;
+      $("tj_results").innerHTML = [
+        row("Specific thrust", `${fmt(Fsp, 3)} N/(kg/s)`),
+        row("TSFC", `${fmt(tsfc, 3)} mg/s/N`),
+        row("Thermal efficiency", `${fmt(etaTh * 100, 2)}%`),
+        row("Propulsive efficiency", `${fmt(etaP * 100, 2)}%`)
+      ].join("");
+      $("tj_copy").textContent = `Specific thrust = ${fmt(Fsp, 3)} N/(kg/s), TSFC = ${fmt(tsfc, 3)} mg/s/N, eta_th = ${fmt(etaTh * 100, 2)}%, eta_p = ${fmt(etaP * 100, 2)}%`;
+    }
+
+    function calcTurbofan() {
+      const V0 = num("tf_V0"), V19 = num("tf_V19"), V9 = num("tf_V9"), mb = num("tf_mb"), mc = num("tf_mc"), f = num("tf_f"), h = num("tf_h"), fp = num("tf_fp");
+      const Ffan = mb * (V19 - V0);
+      const Fcore = mc * ((1 + f) * V9 - V0);
+      const F = Ffan + Fcore + fp;
+      const fuel = mc * f;
+      const jetPower = 0.5 * mb * (V19 * V19 - V0 * V0) + 0.5 * mc * ((1 + f) * V9 * V9 - V0 * V0);
+      const etaTh = jetPower / (fuel * h * 1000);
+      const etaP = F * V0 / jetPower;
+      const tsfc = fuel / F * 1e6;
+      $("tf_results").innerHTML = [
+        row("Fan thrust", `${fmt(Ffan / 1000, 3)} kN`),
+        row("Core thrust", `${fmt(Fcore / 1000, 3)} kN`),
+        row("Net thrust", `${fmt(F / 1000, 3)} kN`),
+        row("Thermal efficiency", `${fmt(etaTh * 100, 2)}%`),
+        row("Propulsive efficiency", `${fmt(etaP * 100, 2)}%`),
+        row("TSFC", `${fmt(tsfc, 3)} mg/s/N`)
+      ].join("");
+      $("tf_copy").textContent = `Fan thrust = ${fmt(Ffan / 1000, 3)} kN, net thrust = ${fmt(F / 1000, 3)} kN, eta_th = ${fmt(etaTh * 100, 2)}%, eta_p = ${fmt(etaP * 100, 2)}%, TSFC = ${fmt(tsfc, 3)} mg/s/N`;
+    }
+
+    solveFullCycle();
+    calcCompressible();
+    calcCompressor();
+    calcBurner();
+    calcTurbine();
+    calcNozzle();
+    calcTurbojet();
+    calcTurbofan();
+  </script>
+</body>
+</html>
